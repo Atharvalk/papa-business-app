@@ -83,14 +83,52 @@ if st.sidebar.button("Add Entry"):
     st.success("✅ Entry Added Successfully!")
 
 # Search Party
-search_query = st.text_input("🔍 Search Party")
+# 🔍 Search with Suggestions
+search_input = st.text_input("🔍 Search Party Name")
 
-matched_parties = [p for p in df["Party"].unique() if search_query.lower() in p.lower()]
+# Match party names starting with input (case-insensitive)
+matched_parties = df[df['Party'].str.lower().str.startswith(search_input.lower())]['Party'].unique()
 
-if matched_parties:
-    selected_party = st.selectbox("Matched Parties", matched_parties)
+# Show suggestions
+if search_input:
+    for party in matched_parties:
+        if st.button(party):
+            selected_party = party
+            break
+    else:
+        selected_party = None
 else:
     selected_party = None
+
+# Show data if a party is selected
+if selected_party:
+    st.subheader(f"📄 Records for {selected_party}")
+    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
+    
+    total_balance = party_data['Balance'].sum()
+    st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
+
+    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+    col1.markdown("**Date**")
+    col2.markdown("**Item Amount ₹**")
+    col3.markdown("**Payment Received ₹**")
+    col4.markdown("**Balance ₹**")
+    col5.markdown(" ")
+    col6.markdown("**Delete**")
+
+    for i, row in party_data.iterrows():
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+        col1.write(row["Date"])
+        col2.write(f"₹{row['Item Amount']}")
+        col3.write(f"₹{row['Payment']}")
+        col4.write(f"₹{row['Balance']}")
+        col5.write("")  # Reserved for future edit button
+        if col6.button("🗑", key=f"del_{i}"):
+            row_index = df[(df["Party"] == selected_party)].index[i]
+            df.drop(index=row_index, inplace=True)
+            df.to_csv("data.csv", index=False)
+            st.rerun()
+
 
 if st.button("📥 Download PDF"):
     party_data = df[df["Party"] == selected_party].reset_index(drop=True)
