@@ -128,30 +128,4 @@ if st.button("📥 Download PDF"):
     file_path = generate_pdf(selected_party, party_data)
     with open(file_path, "rb") as f:
         st.download_button("⬇️ Click to Download", f, file_name=file_path)
-
-if selected_party:
-    st.subheader(f"📄 Records for {selected_party}")
-    df["Date"] = pd.to_datetime(df["Date"])
-    party_data = df[df["Party"] == selected_party].sort_values(by="Date", ascending=False).reset_index(drop=True)
-    total_balance = party_data['Balance'].sum()
-    st.markdown(f"<h3 style='color:#16A085;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h3>", unsafe_allow_html=True)
-    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
-    col1.markdown("**Date**")
-    col2.markdown("**Item Amount ₹**")
-    col3.markdown("**Payment Received ₹**")
-    col4.markdown("**Balance ₹**")
-    col5.markdown(" ")
-    col6.markdown("**Delete**")
-    for i, row in party_data.iterrows():
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
-        col1.write(row["Date"].strftime("%d-%m-%Y"))
-        col2.write(f"Rs.{row['Item Amount']}")
-        col3.write(f"Rs.{row['Payment']}")
-        col4.write(f"Rs.{row['Balance']}")
-        col5.write("")  # Reserved for future edit button
-        if col6.button("🗑", key=f"del2_{i}"):
-            # Find the index of this row in the main df and drop it
-            row_index = df[(df["Party"] == selected_party)].index[i]
-            df.drop(index=row_index, inplace=True)
-            df.to_csv("data.csv", index=False)
-            st.rerun()
+        
