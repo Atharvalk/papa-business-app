@@ -99,6 +99,33 @@ selected_party = st.selectbox(
     index=None,
     placeholder="Type to search...",
 )
+if selected_party:
+    st.subheader(f"📄 Records for {selected_party}")
+    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
+
+    total_balance = party_data['Balance'].sum()
+    st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
+
+    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+    col1.markdown("**Date**")
+    col2.markdown("**Item Amount ₹**")
+    col3.markdown("**Payment Received ₹**")
+    col4.markdown("**Balance ₹**")
+    col5.markdown(" ")
+    col6.markdown("**Delete**")
+
+    for i, row in party_data.iterrows():
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+        col1.write(row["Date"])
+        col2.write(f"₹{row['Item Amount']}")
+        col3.write(f"₹{row['Payment']}")
+        col4.write(f"₹{row['Balance']}")
+        col5.write("")  # Reserved for edit button
+        if col6.button("🗑", key=f"del_{selected_party}_{i}"):
+            row_index = df[(df["Party"] == selected_party)].index[i]
+            df.drop(index=row_index, inplace=True)
+            df.to_csv("data.csv", index=False)
+            st.rerun()
 
 search_input = st.session_state.search_input_val
 matching_parties = [p for p in party_list if search_input.lower() in p.lower()] if search_input else []
