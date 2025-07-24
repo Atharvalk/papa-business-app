@@ -1,4 +1,5 @@
 streamlit
+gspread
 pandas
+oauth2client
 fpdf
-firebase-admin
