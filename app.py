@@ -27,6 +27,8 @@ if not firebase_admin._apps:
     cred = credentials.Certificate(st.secrets["gcp_service_account"])
     firebase_admin.initialize_app(cred)
 
+db = firestore.client()
+
     # ✅ Convert secrets manually to dictionary
     cred_dict = {
         "type": st.secrets["gcp_service_account"]["type"],
@@ -48,9 +50,6 @@ if not firebase_admin._apps:
 
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
-
-db = firestore.client()
-
 
 def generate_pdf(party_name, party_data):
     pdf = FPDF()
