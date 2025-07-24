@@ -1,0 +1,118 @@
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+from fpdf import FPDF
+
+# --- LOGIN SYSTEM ---
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    st.sidebar.title("🔐 Login")
+    username = st.sidebar.text_input("Username")
+    password = st.sidebar.text_input("Password", type="password")
+    if st.sidebar.button("Login"):
+        if username == "admin" and password == "1234":
+            st.session_state.logged_in = True
+            st.success("Login successful!")
+            st.rerun()
+        else:
+            st.error("Invalid username or password.")
+    st.stop()
+
+
+def generate_pdf(party_name, party_data):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.cell(200, 10, txt=f"Party: {party_name}", ln=True, align='L')
+    pdf.cell(200, 10, txt=" ", ln=True)  # empty line
+
+    # Table headers
+    pdf.cell(40, 10, "Date", 1)
+    pdf.cell(40, 10, "Item Amount", 1)
+    pdf.cell(40, 10, "Payment", 1)
+    pdf.cell(40, 10, "Balance", 1)
+    pdf.ln()
+
+    # Table rows
+    for i, row in party_data.iterrows():
+        pdf.cell(40, 10, str(row['Date']), 1)
+        pdf.cell(40, 10, f"Rs. {row['Item Amount']}", 1)
+        pdf.cell(40, 10, f"Rs. {row['Payment']}", 1)
+        pdf.cell(40, 10, f"Rs. {row['Balance']}", 1)
+        pdf.ln()
+
+    # Save PDF
+    file_name = f"{party_name}_records.pdf"
+    pdf.output(file_name)
+    return file_name
+
+# Set page config
+st.set_page_config(page_title="Papa Business App", layout="centered")
+
+st.title("📦 Business Record App")
+
+# Load or create data
+try:
+    df = pd.read_csv("data.csv")
+except:
+    df = pd.DataFrame(columns=["Party", "Date", "Item Amount", "Payment", "Balance"])
+
+# Sidebar: Add new entry
+st.sidebar.header("➕ Add New Entry")
+
+party = st.sidebar.text_input("Party Name")
+item = st.sidebar.number_input("Item Amount ₹", min_value=0, step=100)
+payment = st.sidebar.number_input("Payment Received ₹", min_value=0, step=100)
+date = st.sidebar.date_input("Date", datetime.now())
+
+if st.sidebar.button("Add Entry"):
+    prev_balance = float(df[df["Party"] == party]["Balance"].iloc[-1]) if party in df["Party"].values else 0
+    new_balance = item - payment  # Only individual balance now
+    new_entry = {
+        "Party": party,
+        "Date": date,
+        "Item Amount": item,
+        "Payment": payment,
+        "Balance": new_balance
+    }
+    df = df._append(new_entry, ignore_index=True)
+    df.to_csv("data.csv", index=False)
+    st.success("✅ Entry Added Successfully!")
+
+# Search Party
+selected_party = st.selectbox("🔍 Select Party", sorted(df["Party"].unique()) if not df.empty else [])
+if st.button("📥 Download PDF"):
+    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
+    file_path = generate_pdf(selected_party, party_data)
+    with open(file_path, "rb") as f:
+        st.download_button("⬇️ Click to Download", f, file_name=file_path)
+
+if selected_party:
+    st.subheader(f"📄 Records for {selected_party}")
+    df["Date"] = pd.to_datetime(df["Date"])
+    party_data = df[df["Party"] == selected_party].sort_values(by="Date", ascending=False).reset_index(drop=True)
+    total_balance = party_data['Balance'].sum()
+    st.markdown(f"**🧮 Total Balance for {selected_party}: ₹{total_balance}**")
+    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+    col1.markdown("**Date**")
+    col2.markdown("**Item Amount ₹**")
+    col3.markdown("**Payment Received ₹**")
+    col4.markdown("**Balance ₹**")
+    col5.markdown(" ")
+    col6.markdown("**Delete**")
+    for i, row in party_data.iterrows():
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
+        col1.write(row["Date"].strftime("%d-%m-%Y"))
+        col2.write(f"Rs.{row['Item Amount']}")
+        col3.write(f"Rs.{row['Payment']}")
+        col4.write(f"Rs.{row['Balance']}")
+        col5.write("")  # Reserved for future edit button
+        if col6.button("🗑", key=f"del_{i}"):
+            # Find the index of this row in the main df and drop it
+            row_index = df[(df["Party"] == selected_party)].index[i]
+            df.drop(index=row_index, inplace=True)
+            df.to_csv("data.csv", index=False)
+            st.rerun()
