@@ -93,7 +93,12 @@ if "search_input_val" not in st.session_state:
 def update_search_input():
     st.session_state.search_input_val = st.session_state.search_box
 
-st.text_input("🔍 Type to Search Party", key="search_box", on_change=update_search_input)
+selected_party = st.selectbox(
+    "🔍 Search Party",
+    options=party_list,
+    index=None,
+    placeholder="Type to search...",
+)
 
 search_input = st.session_state.search_input_val
 matching_parties = [p for p in party_list if search_input.lower() in p.lower()] if search_input else []
