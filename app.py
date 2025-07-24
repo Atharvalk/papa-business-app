@@ -84,12 +84,15 @@ if st.sidebar.button("Add Entry"):
 
 # Search Party
 # 🔍 Realtime Suggestion While Typing
+# Realtime Autocomplete Style Search
 party_list = df['Party'].unique().tolist()
 
-search_query = st.text_input("🔍 Type Party Name")
-filtered_parties = [p for p in party_list if search_query.lower() in p.lower()] if search_query else party_list
+search_input = st.text_input("🔍 Type to Search Party")
+matching_parties = [p for p in party_list if search_input.lower() in p.lower()] if search_input else []
 
-selected_party = st.selectbox("Suggested Parties", filtered_parties) if filtered_parties else None
+selected_party = None
+if matching_parties:
+    selected_party = st.selectbox("📋 Matching Parties", matching_parties, index=0, key="live_suggestion")
 
 if selected_party:
     st.subheader(f"📄 Records for {selected_party}")
