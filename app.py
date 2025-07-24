@@ -44,8 +44,8 @@ cred_dict = {
     "universe_domain": st.secrets["gcp_service_account"]["universe_domain"]
     }
 
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
+cred = credentials.Certificate(cred_dict)
+firebase_admin.initialize_app(cred)
 
 
 if not firebase_admin._apps:
