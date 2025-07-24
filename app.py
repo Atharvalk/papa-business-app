@@ -30,7 +30,7 @@ from firebase_admin import credentials
 # Load credentials from Streamlit secrets
 cred_dict = st.secrets["gcp_service_account"]
 cred = credentials.Certificate(json.loads(json.dumps(cred_dict)))
-    firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
