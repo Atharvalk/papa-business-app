@@ -87,8 +87,16 @@ if st.sidebar.button("Add Entry"):
 # Realtime Autocomplete Style Search
 party_list = df['Party'].unique().tolist()
 
-search_input = st.text_input("🔍 Type to Search Party")
-matching_parties = [p for p in party_list if search_input.lower() in p.lower()] if search_input else []
+if "search_text" not in st.session_state:
+    st.session_state.search_text = ""
+
+def update_search():
+    st.session_state.search_text = st.session_state.search_box
+
+st.text_input("🔍 Type Party Name", key="search_box", on_change=update_search)
+
+search_query = st.session_state.search_text
+filtered_parties = [p for p in party_list if search_query.lower() in p.lower()] if search_query else party_list
 
 selected_party = None
 if matching_parties:
@@ -128,4 +136,3 @@ if st.button("📥 Download PDF"):
     file_path = generate_pdf(selected_party, party_data)
     with open(file_path, "rb") as f:
         st.download_button("⬇️ Click to Download", f, file_name=file_path)
-        
