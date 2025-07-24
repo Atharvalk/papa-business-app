@@ -24,7 +24,8 @@ if not st.session_state.logged_in:
 
 # --- FIREBASE SETUP ---
 if not firebase_admin._apps:
-    from firebase_admin import credentials
+    cred = credentials.Certificate(st.secrets["gcp_service_account"])
+    firebase_admin.initialize_app(cred)
 
     # ✅ Convert secrets manually to dictionary
     cred_dict = {
