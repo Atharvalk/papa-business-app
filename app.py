@@ -83,7 +83,13 @@ if st.sidebar.button("Add Entry"):
     st.success("✅ Entry Added Successfully!")
 
 # Search Party
-selected_party = st.selectbox("🔍 Select Party", sorted(df["Party"].unique()) if not df.empty else [])
+party_list = sorted(df["Party"].unique()) if not df.empty else []
+selected_party = st.text_input("🔍 Search Party Name")
+
+if selected_party and selected_party not in party_list:
+    st.warning("⚠️ Party not found.")
+elif selected_party:
+    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
 if st.button("📥 Download PDF"):
     party_data = df[df["Party"] == selected_party].reset_index(drop=True)
     file_path = generate_pdf(selected_party, party_data)
@@ -95,7 +101,7 @@ if selected_party:
     df["Date"] = pd.to_datetime(df["Date"])
     party_data = df[df["Party"] == selected_party].sort_values(by="Date", ascending=False).reset_index(drop=True)
     total_balance = party_data['Balance'].sum()
-    st.markdown(f"**🧮 Total Balance for {selected_party}: ₹{total_balance}**")
+    st.markdown(f"<h3 style='color:#16A085;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h3>", unsafe_allow_html=True)
     col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
     col1.markdown("**Date**")
     col2.markdown("**Item Amount ₹**")
