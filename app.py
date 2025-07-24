@@ -83,24 +83,14 @@ if st.sidebar.button("Add Entry"):
     st.success("✅ Entry Added Successfully!")
 
 # Search Party
-# 🔍 Search with Suggestions
-search_input = st.text_input("🔍 Search Party Name")
+# 🔍 Realtime Suggestion While Typing
+party_list = df['Party'].unique().tolist()
 
-# Match party names starting with input (case-insensitive)
-matched_parties = df[df['Party'].str.lower().str.startswith(search_input.lower())]['Party'].unique()
+search_query = st.text_input("🔍 Type Party Name")
+filtered_parties = [p for p in party_list if search_query.lower() in p.lower()] if search_query else party_list
 
-# Show suggestions
-if search_input:
-    for party in matched_parties:
-        if st.button(party):
-            selected_party = party
-            break
-    else:
-        selected_party = None
-else:
-    selected_party = None
+selected_party = st.selectbox("Suggested Parties", filtered_parties) if filtered_parties else None
 
-# Show data if a party is selected
 if selected_party:
     st.subheader(f"📄 Records for {selected_party}")
     party_data = df[df["Party"] == selected_party].reset_index(drop=True)
@@ -122,7 +112,7 @@ if selected_party:
         col2.write(f"₹{row['Item Amount']}")
         col3.write(f"₹{row['Payment']}")
         col4.write(f"₹{row['Balance']}")
-        col5.write("")  # Reserved for future edit button
+        col5.write("")  # Reserved for edit button
         if col6.button("🗑", key=f"del_{i}"):
             row_index = df[(df["Party"] == selected_party)].index[i]
             df.drop(index=row_index, inplace=True)
