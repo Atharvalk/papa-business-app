@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from fpdf import FPDF
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 # --- LOGIN SYSTEM ---
 if "logged_in" not in st.session_state:
@@ -19,6 +21,13 @@ if not st.session_state.logged_in:
         else:
             st.error("Invalid username or password.")
     st.stop()
+
+# --- FIREBASE SETUP ---
+if not firebase_admin._apps:
+    cred = credentials.Certificate("credentials.json")
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 
 def generate_pdf(party_name, party_data):
