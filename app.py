@@ -83,13 +83,15 @@ if st.sidebar.button("Add Entry"):
     st.success("✅ Entry Added Successfully!")
 
 # Search Party
-party_list = sorted(df["Party"].unique()) if not df.empty else []
-selected_party = st.text_input("🔍 Search Party Name")
+search_query = st.text_input("🔍 Search Party")
 
-if selected_party and selected_party not in party_list:
-    st.warning("⚠️ Party not found.")
-elif selected_party:
-    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
+matched_parties = [p for p in df["Party"].unique() if search_query.lower() in p.lower()]
+
+if matched_parties:
+    selected_party = st.selectbox("Matched Parties", matched_parties)
+else:
+    selected_party = None
+
 if st.button("📥 Download PDF"):
     party_data = df[df["Party"] == selected_party].reset_index(drop=True)
     file_path = generate_pdf(selected_party, party_data)
