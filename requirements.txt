@@ -1,5 +1,5 @@
 streamlit
 gspread
-pandas
-oauth2client
+google-auth
 fpdf
+pandas
