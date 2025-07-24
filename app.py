@@ -149,7 +149,7 @@ if selected_party:
         col3.write(f"Rs.{row['Payment']}")
         col4.write(f"Rs.{row['Balance']}")
         col5.write("")  # Reserved for future edit button
-        if col6.button("🗑", key=f"del_{i}"):
+        if col6.button("🗑", key=f"del2_{i}"):
             # Find the index of this row in the main df and drop it
             row_index = df[(df["Party"] == selected_party)].index[i]
             df.drop(index=row_index, inplace=True)
