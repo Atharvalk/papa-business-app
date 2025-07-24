@@ -2,8 +2,17 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from fpdf import FPDF
-import firebase_admin
-from firebase_admin import credentials, firestore
+import gspread
+
+# Google Sheets access
+gc = gspread.service_account(filename="credentials.json")
+sh = gc.open("BusinessAppData")  # ✅ sheet ka naam tu already de chuka hai
+worksheet = sh.sheet1
+
+# Sheet data → DataFrame
+data = worksheet.get_all_values()
+df = pd.DataFrame(data[1:], columns=data[0])
+
 
 # --- LOGIN SYSTEM ---
 if "logged_in" not in st.session_state:
@@ -22,18 +31,6 @@ if not st.session_state.logged_in:
             st.error("Invalid username or password.")
     st.stop()
 
-# --- FIREBASE SETUP ---
-# --- FIREBASE SETUP ---
-import json
-
-if not firebase_admin._apps:
-    cred_dict = dict(st.secrets["gcp_service_account"])
-    cred_dict["private_key"] = cred_dict["private_key"].replace("\\n", "\n")
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
-
 # ✅ Convert secrets manually to dictionary
 cred_dict = {
     "type": st.secrets["gcp_service_account"]["type"],
@@ -48,13 +45,6 @@ cred_dict = {
     "client_x509_cert_url": st.secrets["gcp_service_account"]["client_x509_cert_url"],
     "universe_domain": st.secrets["gcp_service_account"]["universe_domain"]
     }
-
-cred = credentials.Certificate(cred_dict)
-firebase_admin.initialize_app(cred)
-
-
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
 
 def generate_pdf(party_name, party_data):
     pdf = FPDF()
