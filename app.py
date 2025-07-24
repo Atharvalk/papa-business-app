@@ -24,7 +24,12 @@ if not st.session_state.logged_in:
 
 # --- FIREBASE SETUP ---
 if not firebase_admin._apps:
-    cred = credentials.Certificate("credentials.json")
+    import json
+from firebase_admin import credentials
+
+# Load credentials from Streamlit secrets
+cred_dict = st.secrets["gcp_service_account"]
+cred = credentials.Certificate(json.loads(json.dumps(cred_dict)))
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
