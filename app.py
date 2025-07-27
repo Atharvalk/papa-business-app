@@ -93,58 +93,96 @@ with tab1:
             st.rerun()
 
     # ------------------ 🔍 Party Search / Suggestions ------------------
-    party_list = df["Party"].unique().tolist()
-    if "selected_party" not in st.session_state:
-        st.session_state.selected_party = ""
+party_list = df["Party"].unique().tolist()
+if "selected_party" not in st.session_state:
+    st.session_state.selected_party = ""
 
-    typed_party = st.text_input("🔍 Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
-    party_suggestions = [p for p in party_list if typed_party.lower() in p.lower()]
-    if typed_party:
-        st.markdown("### 🔍 Suggestions:")
-        for s in party_suggestions[:5]:
-            if st.button(s, key=f"party_suggest_{s}"):
-                st.session_state.selected_party = s
-                typed_party = s
+typed_party = st.text_input("🔍 Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
+party_suggestions = [p for p in party_list if typed_party.lower() in p.lower()]
+if typed_party:
+    st.markdown("### 🔍 Suggestions:")
+    for s in party_suggestions[:5]:
+        if st.button(s, key=f"party_suggest_{s}"):
+            st.session_state.selected_party = s
+            typed_party = s
 
-    selected_party = typed_party
+selected_party = typed_party
 
-    # ------------------ 📄 Party Records Table ------------------
-    if selected_party:
-        st.subheader(f"📄 Records for {selected_party}")
-        party_data = df[df["Party"] == selected_party]
-        total_balance = party_data["Balance"].astype(float).sum()
+# ------------------ 📄 Party Records Table ------------------
+if selected_party:
+    st.subheader(f"📄 Records for {selected_party}")
+    party_data = df[df["Party"] == selected_party]
+    total_balance = party_data["Balance"].astype(float).sum()
 
-        st.markdown(
-            f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>",
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>",
+        unsafe_allow_html=True,
+    )
 
-        # 🔧 Mobile-friendly horizontal scroll container
-        st.markdown("<div style='overflow-x:auto;'>", unsafe_allow_html=True)
+    # ------- HTML Table Start -------
+    html_table = """
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #222;
+            color: white;
+        }
+        td button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Balance</th>
+            <th>Index</th>
+            <th>❌ Delete</th>
+        </tr>
+    """
 
-        # --------- Table Headers ---------
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
-        col1.markdown("**Date**")
-        col2.markdown("**Amount**")
-        col3.markdown("**Payment**")
-        col4.markdown("**Balance**")
-        col5.markdown("**Index**")
-        col6.markdown("**❌ Delete**")
+    for real_idx, row in party_data.iterrows():
+        html_table += f"""
+        <tr>
+            <td>{row['Date']}</td>
+            <td>{row['Amount']}</td>
+            <td>{row['Payment']}</td>
+            <td>{row['Balance']}</td>
+            <td>{real_idx}</td>
+            <td>
+                <form action="" method="post">
+                    <button type="submit" name="delete_{real_idx}">❌</button>
+                </form>
+            </td>
+        </tr>
+        """
 
-        # --------- Table Rows ---------
-        for real_idx, row in party_data.iterrows():
-            c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 2, 2, 2, 1])
-            c1.write(row["Date"])
-            c2.write(row["Amount"])
-            c3.write(row["Payment"])
-            c4.write(row["Balance"])
-            c5.write(str(real_idx))
-            if c6.button("❌", key=f"del_{real_idx}"):
-                if safe_delete_row(worksheet, real_idx + 2):
-                    st.success("✅ Entry deleted")
-                    st.rerun()
+    html_table += "</table>"
 
-        st.markdown("</div>", unsafe_allow_html=True)  # Close scrollable container
+    st.markdown(html_table, unsafe_allow_html=True)
+
+    # -------- Handle Delete Buttons --------
+    for real_idx, _ in party_data.iterrows():
+        if st.session_state.get(f"delete_{real_idx}", False):
+            if safe_delete_row(worksheet, real_idx + 2):
+                st.success("✅ Entry deleted")
+                st.rerun()
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
