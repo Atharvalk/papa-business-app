@@ -170,17 +170,17 @@ html_table += "</table></div>"
 # --- Properly Render HTML ---
 st.markdown(html_table, unsafe_allow_html=True)
 
-    # -------- ✅ Delete Buttons Section --------
-    st.markdown("### 🗑️ Delete Entry")
-    for real_idx, row in party_data.iterrows():
-        col1, col2 = st.columns([6, 1])
-        with col1:
-            st.markdown(f"🗓️ {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
-        with col2:
-            if st.button("❌", key=f"delete_{real_idx}"):
-                if safe_delete_row(worksheet, real_idx + 2):
-                    st.success("✅ Entry deleted")
-                    st.rerun()
+# -------- ✅ Delete Buttons Section --------
+st.markdown("### 🗑️ Delete Entry")
+for real_idx, row in party_data.iterrows():
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.markdown(f"🗓️ {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
+    with col2:
+        if st.button("❌", key=f"delete_{real_idx}"):
+            if safe_delete_row(worksheet, real_idx + 2):
+                st.success("✅ Entry deleted")
+                st.rerun()
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
