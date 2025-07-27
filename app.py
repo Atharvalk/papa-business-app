@@ -184,33 +184,33 @@ with tab2:
         st.subheader(f"📥 Add or Update Stock for: {selected_company}")
 
         item_names = df["item"].dropna().unique().tolist()
-        #--- Ensure session state keys exist ---
+        # ✅ Step 1: Session default set karo
         if "selected_item" not in st.session_state:
             st.session_state.selected_item = ""
         if "item_selected" not in st.session_state:
             st.session_state.item_selected = False
 
-        # --- Item Name Input with Suggestions ---
-        typed_item = st.session_state.get("selected_item", "")
+        # ✅ Step 2: Text Input
+        typed_item = st.session_state.selected_item if not st.session_state.item_selected else ""
         typed_item = st.text_input("🧾 Item Name", value=typed_item, placeholder="Type to search or add")
 
+        # ✅ Step 3: Suggestions
         suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
-        if typed_item:
+        if typed_item and not st.session_state.item_selected:
             st.markdown("### 🔍 Suggestions:")
             for s in suggestions[:5]:
                 if st.button(s, key=f"suggest_{s}"):
                     st.session_state.selected_item = s
-                    st.session_state.item_selected = True  # 🟢 flag to avoid rerun loop
+                    st.session_state.item_selected = True
                     st.experimental_rerun()
 
-        # 🛑 Prevent rerun loop
-        if st.session_state.get("item_selected"):
+        # ✅ Step 4: Rerun flag handled
+        if st.session_state.item_selected:
             typed_item = st.session_state.selected_item
             st.session_state.item_selected = False
 
-        # 🟢 Final value for item_name
+        # ✅ Final value
         item_name = typed_item
-
 
         selected_dates = st.date_input("📅 Select up to 10 dates", [], min_value=datetime(2023, 1, 1), max_value=datetime.now(), help="Max 10 dates", key="date_input", disabled=False)
         if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
