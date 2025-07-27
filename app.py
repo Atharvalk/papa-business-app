@@ -5,6 +5,29 @@ from fpdf import FPDF
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import timedelta
+import time
+
+# --- Helper: Safe append with retry ---
+def safe_append_row(worksheet, row, retries=3, delay=2):
+    for _ in range(retries):
+        try:
+            worksheet.append_row(row)
+            return True
+        except gspread.exceptions.APIError:
+            time.sleep(delay)
+    st.error("❌ Failed to append row after retries.")
+    return False
+
+# --- Helper: Safe delete row with retry ---
+def safe_delete_row(worksheet, row_index, retries=3, delay=2):
+    for _ in range(retries):
+        try:
+            worksheet.delete_rows(row_index)
+            return True
+        except gspread.exceptions.APIError:
+            time.sleep(delay)
+    st.error("❌ Failed to delete row after retries.")
+    return False
 
 # --- GOOGLE SHEETS SETUP ---
 creds = st.secrets["service_account"]
@@ -53,9 +76,9 @@ with tab1:
         prev_balance = float(df[df["Party"] == party]["Balance"].iloc[-1]) if party in df["Party"].values else 0
         new_balance = item - payment
         new_row = [party, str(date), str(item), str(payment), str(new_balance)]
-        worksheet.append_row(new_row)
-        st.success("✅ Entry Added Successfully!")
-        st.rerun()
+        if safe_append_row(worksheet, new_row):
+            st.success("✅ Entry Added Successfully!")
+            st.rerun()
 
     party_list = df["Party"].unique().tolist()
     # --- Party Name Input with Suggestions ---
@@ -96,9 +119,9 @@ with tab1:
             c4.write(row["Balance"])
             c5.write(str(real_idx))
             if c6.button("❌", key=f"del_{real_idx}"):
-                worksheet.delete_rows(real_idx + 2)
-                st.success("✅ Entry deleted")
-                st.rerun()
+                if safe_delete_row(worksheet, real_idx + 2):
+                    st.success("✅ Entry deleted")
+                    st.rerun()
 
         def generate_pdf(party_name, party_data):
             pdf = FPDF()
