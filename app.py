@@ -59,7 +59,7 @@ with tab1:
 
     party_list = df["Party"].unique().tolist()
     # --- Party Name Input with Suggestions ---
-        if "selected_party" not in st.session_state:
+    if "selected_party" not in st.session_state:
         st.session_state.selected_party = ""
 
     typed_party = st.text_input("🔍 Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
