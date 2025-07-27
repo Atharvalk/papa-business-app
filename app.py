@@ -119,7 +119,7 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # --------- Mobile-Responsive Table ---------
+    # --------- Mobile-Responsive Table Display ---------
     html_table = """
     <style>
         .responsive-table {
@@ -140,13 +140,8 @@ if selected_party:
             background-color: #111;
             color: #fff;
         }
-        td button {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
+        td {
+            color: #eee;
         }
     </style>
     <div class="responsive-table">
@@ -157,36 +152,39 @@ if selected_party:
                 <th>Payment</th>
                 <th>Balance</th>
                 <th>Index</th>
-                <th>❌ Delete</th>
             </tr>
     """
 
+    # Generate table rows
     for real_idx, row in party_data.iterrows():
         html_table += f"""
-        <tr>
-            <td>{row['Date']}</td>
-            <td>{row['Amount']}</td>
-            <td>{row['Payment']}</td>
-            <td>{row['Balance']}</td>
-            <td>{real_idx}</td>
-            <td>
-                <form action="" method="post">
-                    <button name="delete_{real_idx}">❌</button>
-                </form>
-            </td>
-        </tr>
+            <tr>
+                <td>{row['Date']}</td>
+                <td>{row['Amount']}</td>
+                <td>{row['Payment']}</td>
+                <td>{row['Balance']}</td>
+                <td>{real_idx}</td>
+            </tr>
         """
 
     html_table += "</table></div>"
 
     st.markdown(html_table, unsafe_allow_html=True)
 
-    # -------- Handle Delete Button --------
-    for real_idx, _ in party_data.iterrows():
-        if st.session_state.get(f"delete_{real_idx}", False):
-            if safe_delete_row(worksheet, real_idx + 2):
-                st.success("✅ Entry deleted")
-                st.rerun()
+    # -------- Delete Buttons Below Table --------
+    st.markdown("### ❌ Delete Entries")
+    for real_idx, row in party_data.iterrows():
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            st.markdown(
+                f"**Index {real_idx} | {row['Date']} | Amount: ₹{row['Amount']} | Payment: ₹{row['Payment']}**"
+            )
+        with col2:
+            if st.button("❌", key=f"delete_{real_idx}"):
+                if safe_delete_row(worksheet, real_idx + 2):  # adjust for header
+                    st.success(f"✅ Entry deleted for index {real_idx}")
+                    st.rerun()
+
 
 
         # ------------------ 💾 Generate PDF Download Button ------------------
