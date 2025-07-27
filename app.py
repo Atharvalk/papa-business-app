@@ -6,6 +6,7 @@ from fpdf import FPDF
 import gspread
 from google.oauth2.service_account import Credentials
 import time
+from streamlit.components.v1 import html
 
 # --- GOOGLE SHEETS SETUP ---
 creds = st.secrets["service_account"]
@@ -121,58 +122,60 @@ if selected_party:
 
     st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
 
-    # Responsive styled table
-    st.markdown(
-        """
-        <style>
-            .responsive-table {
-                overflow-x: auto;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                min-width: 600px;
-            }
-            th, td {
-                border: 1px solid #555;
-                padding: 8px;
-                text-align: center;
-            }
-            th {
-                background-color: #111;
-                color: #fff;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    from streamlit.components.v1 import html
 
-    table_html = """
-    <div class="responsive-table">
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Payment</th>
-                <th>Balance</th>
-                <th>Index</th>
-            </tr>
-        </thead>
-        <tbody>
+# (After computing party_data and total_balance)
+table_html = """
+<style>
+    .responsive-table {
+        overflow-x: auto;
+        width: 100%;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+        font-family: Arial, sans-serif;
+    }
+    th, td {
+        border: 1px solid #555;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #111;
+        color: #fff;
+    }
+</style>
+<div class="responsive-table">
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Balance</th>
+            <th>Index</th>
+        </tr>
+    </thead>
+    <tbody>
+"""
+
+for i, row in party_data.iterrows():
+    table_html += f"""
+        <tr>
+            <td>{row['Date']}</td>
+            <td>{row['Amount']}</td>
+            <td>{row['Payment']}</td>
+            <td>{row['Balance']}</td>
+            <td>{i}</td>
+        </tr>
     """
-    for i, row in party_data.iterrows():
-        table_html += f"""
-            <tr>
-                <td>{row['Date']}</td>
-                <td>{row['Amount']}</td>
-                <td>{row['Payment']}</td>
-                <td>{row['Balance']}</td>
-                <td>{i}</td>
-            </tr>
-        """
-    table_html += "</tbody></table></div>"
-    st.markdown(table_html, unsafe_allow_html=True)
+
+table_html += "</tbody></table></div>"
+
+# 🔥 This is the magic line — replace st.markdown with this:
+html(table_html, height=400, scrolling=True)
 
     # ---------------- 🗑️ Delete Section ----------------
     st.markdown("### 🗑️ Delete Entry")
@@ -212,8 +215,6 @@ if selected_party:
         file_path = generate_pdf(selected_party, party_data)
         with open(file_path, "rb") as f:
             st.download_button("⬇️ Click to Download", f, file_name=file_path)
-
-
 
 
 
