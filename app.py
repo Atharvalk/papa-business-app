@@ -176,10 +176,15 @@ if selected_party:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # ---- Delete Buttons (Outside Table) ----
-    for real_idx, _ in party_data.iterrows():
-        if st.button(f"❌ Delete Entry {real_idx}", key=f"del_{real_idx}"):
+    st.markdown("#### Delete Entries")
+for real_idx, _ in party_data.iterrows():
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"🗓️ **{df.at[real_idx, 'Date']}** | ₹{df.at[real_idx, 'Amount']} → ₹{df.at[real_idx, 'Balance']}")
+    with col2:
+        if st.button("❌", key=f"delete_{real_idx}"):
             if safe_delete_row(worksheet, real_idx + 2):
-                st.success(f"✅ Entry {real_idx} deleted")
+                st.success("✅ Entry deleted")
                 st.rerun()
 
         # ------------------ 💾 Generate PDF Download Button ------------------
