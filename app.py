@@ -62,12 +62,22 @@ if not st.session_state.logged_in:
 st.set_page_config(page_title="Papa Business App", layout="centered")
 tab1, tab2 = st.tabs(["📦 Business Record", "📊 Stock Manager"])
 
+
+
+
+
+
+
 # =============== 📦 BUSINESS RECORD TAB ===============
 with tab1:
+    # ----------------------- Title -----------------------
     st.title("📦 Business Record System")
+
+    # ------------------ Fetch Sheet Data ------------------
     data = worksheet.get_all_values()
     df = pd.DataFrame(data[1:], columns=data[0])
 
+    # ----------------- ➕ Add New Entry Section -----------------
     st.sidebar.header("➕ Add New Entry")
     party = st.sidebar.text_input("Party Name")
     item = st.sidebar.number_input("Item Amount ₹", min_value=0, step=100)
@@ -82,6 +92,7 @@ with tab1:
             st.success("✅ Entry Added Successfully!")
             st.rerun()
 
+    # ------------------ 🔍 Party Search / Suggestions ------------------
     party_list = df["Party"].unique().tolist()
     if "selected_party" not in st.session_state:
         st.session_state.selected_party = ""
@@ -97,12 +108,21 @@ with tab1:
 
     selected_party = typed_party
 
+    # ------------------ 📄 Party Records Table ------------------
     if selected_party:
         st.subheader(f"📄 Records for {selected_party}")
         party_data = df[df["Party"] == selected_party]
         total_balance = party_data["Balance"].astype(float).sum()
-        st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
 
+        st.markdown(
+            f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>",
+            unsafe_allow_html=True,
+        )
+
+        # 🔧 Mobile-friendly horizontal scroll container
+        st.markdown("<div style='overflow-x:auto;'>", unsafe_allow_html=True)
+
+        # --------- Table Headers ---------
         col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
         col1.markdown("**Date**")
         col2.markdown("**Amount**")
@@ -111,6 +131,7 @@ with tab1:
         col5.markdown("**Index**")
         col6.markdown("**❌ Delete**")
 
+        # --------- Table Rows ---------
         for real_idx, row in party_data.iterrows():
             c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 2, 2, 2, 1])
             c1.write(row["Date"])
@@ -123,6 +144,9 @@ with tab1:
                     st.success("✅ Entry deleted")
                     st.rerun()
 
+        st.markdown("</div>", unsafe_allow_html=True)  # Close scrollable container
+
+        # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
             pdf = FPDF()
             pdf.add_page()
@@ -149,6 +173,11 @@ with tab1:
             file_path = generate_pdf(selected_party, party_data)
             with open(file_path, "rb") as f:
                 st.download_button("⬇️ Click to Download", f, file_name=file_path)
+
+
+
+
+
 
 # =============== 📊 STOCK MANAGER TAB ===============
 with tab2:
