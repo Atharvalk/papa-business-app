@@ -78,6 +78,7 @@ with tab1:
 
         # 🟢 Final value for use
         selected_party = typed_party
+    selected_party = st.session_state.get("selected_party", "")
 
     if selected_party:
         st.subheader(f"📄 Records for {selected_party}")
