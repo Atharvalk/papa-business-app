@@ -59,17 +59,18 @@ with tab1:
 
     party_list = df["Party"].unique().tolist()
     typed_party = st.session_state.get("selected_party", "")
-    typed_party = st.text_input("🔍 Party Name", placeholder="Start typing...")
-    suggested = [p for p in party_list if typed_party.lower() in p.lower()]
+    typed_party = st.text_input("🔍 Party Name", value=typed_party, placeholder="Start typing...")
 
+    suggested = [p for p in party_list if typed_party.lower() in p.lower()]
     if typed_party:
         st.markdown("### 🔍 Suggestions:")
-        for s in suggested[:5]:  # limit 5 suggestions
-            if st.button(s, key=f"suggest_{s}"):
+        for s in suggested[:5]:
+            if st.button(s, key=f"party_suggest_{s}"):
                 st.session_state.selected_party = s
                 st.experimental_rerun()
 
-    selected_party = typed_party if typed_party in party_list else None
+    selected_party = st.session_state.get("selected_party", typed_party)
+
 
     if selected_party:
         st.subheader(f"📄 Records for {selected_party}")
@@ -175,18 +176,18 @@ with tab2:
         st.subheader(f"📥 Add or Update Stock for: {selected_company}")
 
         item_names = df["item"].dropna().unique().tolist()
-        typed_item = st.text_input("🧾 Item Name", placeholder="Type to search or add")
-        suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
+        typed_item = st.session_state.get("selected_item", "")
+        typed_item = st.text_input("🧾 Item Name", value=typed_item, placeholder="Type to search or add")
 
+        suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
         if typed_item:
             st.markdown("### 🔍 Suggestions:")
             for s in suggestions[:5]:
-                if st.button(s, key=f"item_suggest_{s}"):
-                    typed_item = s
-                    st.experimental_rerun()
+                if st.button(s, key=f"suggest_{s}"):
+                st.session_state.selected_item = s
+                st.experimental_rerun()
 
-        item_name = typed_item
-
+        item_name = st.session_state.get("selected_item", typed_item)
 
         selected_dates = st.date_input("📅 Select up to 10 dates", [], min_value=datetime(2023, 1, 1), max_value=datetime.now(), help="Max 10 dates", key="date_input", disabled=False)
         if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
