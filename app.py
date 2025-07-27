@@ -63,9 +63,12 @@ tab1, tab2 = st.tabs(["📦 Business Record", "📊 Stock Manager"])
 # =============== 📦 BUSINESS RECORD TAB ===============
 with tab1:
     st.title("📦 Business Record System")
+
+    # --- Load data from worksheet ---
     data = worksheet.get_all_values()
     df = pd.DataFrame(data[1:], columns=data[0])
 
+    # --- Sidebar Inputs ---
     st.sidebar.header("➕ Add New Entry")
     party = st.sidebar.text_input("Party Name")
     item = st.sidebar.number_input("Item Amount ₹", min_value=0, step=100)
@@ -80,8 +83,8 @@ with tab1:
             st.success("✅ Entry Added Successfully!")
             st.rerun()
 
+    # --- Party Search & Suggestion ---
     party_list = df["Party"].unique().tolist()
-    # --- Party Name Input with Suggestions ---
     if "selected_party" not in st.session_state:
         st.session_state.selected_party = ""
 
@@ -97,32 +100,41 @@ with tab1:
 
     selected_party = typed_party
 
+    # --- Show Records ---
     if selected_party:
         st.subheader(f"📄 Records for {selected_party}")
         party_data = df[df["Party"] == selected_party]
         total_balance = party_data["Balance"].astype(float).sum()
         st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
 
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
-        col1.markdown("**Date**")
-        col2.markdown("**Amount**")
-        col3.markdown("**Payment**")
-        col4.markdown("**Balance**")
-        col5.markdown("**Index**")
-        col6.markdown("**❌ Delete**")
+        # --- Add mobile-friendly scroll style ---
+        st.markdown("""
+            <style>
+            .scrollable-table {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .scrollable-table th, .scrollable-table td {
+                padding: 8px 12px;
+                text-align: left;
+            }
+            </style>
+        """, unsafe_allow_html=True)
 
+        # --- Render Table ---
+        st.markdown('<div class="scrollable-table">', unsafe_allow_html=True)
+        st.markdown("| Date | Amount | Payment | Balance | Index | Delete |\n|---|---|---|---|---|---|", unsafe_allow_html=True)
         for real_idx, row in party_data.iterrows():
-            c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 2, 2, 2, 1])
-            c1.write(row["Date"])
-            c2.write(row["Amount"])
-            c3.write(row["Payment"])
-            c4.write(row["Balance"])
-            c5.write(str(real_idx))
-            if c6.button("❌", key=f"del_{real_idx}"):
+            delete_button = st.button("❌", key=f"del_{real_idx}")
+            row_md = f"| {row['Date']} | {row['Amount']} | {row['Payment']} | {row['Balance']} | {real_idx} | {'🗑️' if delete_button else ''} |"
+            st.markdown(row_md, unsafe_allow_html=True)
+            if delete_button:
                 if safe_delete_row(worksheet, real_idx + 2):
                     st.success("✅ Entry deleted")
                     st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
+        # --- Generate PDF ---
         def generate_pdf(party_name, party_data):
             pdf = FPDF()
             pdf.add_page()
