@@ -120,40 +120,42 @@ if selected_party:
     )
 
     # --------- HTML Table ---------
-    html_table = """
-    <style>
-        .responsive-table {
-            width: 100%;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-        th, td {
-            border: 1px solid #555;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #111;
-            color: #fff;
-        }
-    </style>
-    <div class="responsive-table">
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Payment</th>
-                <th>Balance</th>
-                <th>Index</th>
-            </tr>
-    """
+    # --- Build HTML Table as string ---
+html_table = """
+<style>
+    .responsive-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    th, td {
+        border: 1px solid #555;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #111;
+        color: #fff;
+    }
+</style>
 
-    for real_idx, row in party_data.iterrows():
-        html_table += f"""
+<div class="responsive-table">
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Balance</th>
+            <th>Index</th>
+        </tr>
+"""
+
+for real_idx, row in party_data.iterrows():
+    html_table += f"""
         <tr>
             <td>{row['Date']}</td>
             <td>{row['Amount']}</td>
@@ -161,11 +163,12 @@ if selected_party:
             <td>{row['Balance']}</td>
             <td>{real_idx}</td>
         </tr>
-        """
+    """
 
-    html_table += "</table></div>"
+html_table += "</table></div>"
 
-    st.markdown(html_table, unsafe_allow_html=True)
+# --- Properly Render HTML ---
+st.markdown(html_table, unsafe_allow_html=True)
 
     # -------- ✅ Delete Buttons Section --------
     st.markdown("### 🗑️ Delete Entry")
@@ -178,7 +181,6 @@ if selected_party:
                 if safe_delete_row(worksheet, real_idx + 2):
                     st.success("✅ Entry deleted")
                     st.rerun()
-
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
