@@ -119,70 +119,36 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # ------- HTML Table Start -------
-    html_table = """
+    # ---------- Table Header ----------
+    st.markdown("""
     <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            overflow-x: auto;
-            display: block;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
+        .table-header th {
             background-color: #222;
             color: white;
+            padding: 8px;
+            border: 1px solid #444;
+            text-align: center;
         }
     </style>
-    <div style="overflow-x: auto;">
-    <table>
+    <table class='table-header'>
         <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Payment</th>
-            <th>Balance</th>
-            <th>Index</th>
-            <th>❌ Delete</th>
+            <th>Date</th><th>Amount</th><th>Payment</th><th>Balance</th><th>Index</th><th>❌ Delete</th>
         </tr>
-    """
+    </table>
+    """, unsafe_allow_html=True)
 
-    # Store rows for buttons
-    button_row_ids = []
-
+    # ---------- Table Body with Delete Buttons ----------
     for real_idx, row in party_data.iterrows():
-        html_table += f"""
-        <tr>
-            <td>{row['Date']}</td>
-            <td>{row['Amount']}</td>
-            <td>{row['Payment']}</td>
-            <td>{row['Balance']}</td>
-            <td>{real_idx}</td>
-            <td>[DELETE_BTN_{real_idx}]</td>
-        </tr>
-        """
-        button_row_ids.append(real_idx)
-
-    html_table += "</table></div>"
-
-    # First, render dummy table with placeholders
-    for real_idx in button_row_ids:
-        html_table = html_table.replace(f"[DELETE_BTN_{real_idx}]", f"__BUTTON_PLACEHOLDER_{real_idx}__")
-
-    st.markdown(html_table, unsafe_allow_html=True)
-
-    # Now, actually place Streamlit buttons after rendering table
-    for real_idx in button_row_ids:
-        button_key = f"DELETE_BTN_{real_idx}"
-        button_html = ""
-        if st.button("❌", key=button_key):
+        cols = st.columns([1, 1, 1, 1, 0.5, 0.5])
+        cols[0].write(row["Date"])
+        cols[1].write(row["Amount"])
+        cols[2].write(row["Payment"])
+        cols[3].write(row["Balance"])
+        cols[4].write(real_idx)
+        if cols[5].button("❌", key=f"del_{real_idx}"):
             if safe_delete_row(worksheet, real_idx + 2):
                 st.success("✅ Entry deleted")
                 st.rerun()
-
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
