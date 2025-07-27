@@ -58,6 +58,7 @@ with tab1:
         st.rerun()
 
     party_list = df["Party"].unique().tolist()
+    typed_party = st.session_state.get("selected_party", "")
     typed_party = st.text_input("🔍 Party Name", placeholder="Start typing...")
     suggested = [p for p in party_list if typed_party.lower() in p.lower()]
 
@@ -65,7 +66,7 @@ with tab1:
         st.markdown("### 🔍 Suggestions:")
         for s in suggested[:5]:  # limit 5 suggestions
             if st.button(s, key=f"suggest_{s}"):
-                typed_party = s
+                st.session_state.selected_party = s
                 st.experimental_rerun()
 
     selected_party = typed_party if typed_party in party_list else None
