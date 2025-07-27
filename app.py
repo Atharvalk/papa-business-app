@@ -178,15 +178,15 @@ table_html += "</tbody></table></div>"
 html(table_html, height=400, scrolling=True)
 
     # ---------------- 🗑️ Delete Section ----------------
-    st.markdown("### 🗑️ Delete Entry")
-    for i, row in party_data.iterrows():
-        with st.container():
-            st.write(f"📅 {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
-            if st.button("❌", key=f"delete_{i}"):
-                global_idx = df[(df["Party"] == selected_party)].index[i]  # Get actual row index in full df
-                if safe_delete_row(worksheet, global_idx + 2):  # +2 for header and 1-indexing
-                    st.success("✅ Entry deleted successfully.")
-                    st.rerun()
+st.markdown("### 🗑️ Delete Entry")
+for i, row in party_data.iterrows():
+    with st.container():
+        st.write(f"📅 {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
+        if st.button("❌", key=f"delete_{i}"):
+            global_idx = df[(df["Party"] == selected_party)].index[i]  # Get actual row index in full df
+            if safe_delete_row(worksheet, global_idx + 2):  # +2 for header and 1-indexing
+                st.success("✅ Entry deleted successfully.")
+                st.rerun()
 
     # ---------------- 💾 Download PDF Button ----------------
     def generate_pdf(party_name, data):
