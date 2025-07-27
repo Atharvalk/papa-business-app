@@ -144,7 +144,7 @@ with tab1:
             pdf.output(file_name)
             return file_name
 
-        if st.button("🗅 Download PDF"):
+        if st.button("💾Download PDF"):
             party_data = df[df["Party"] == selected_party].reset_index(drop=True)
             file_path = generate_pdf(selected_party, party_data)
             with open(file_path, "rb") as f:
