@@ -184,6 +184,12 @@ with tab2:
         st.subheader(f"📥 Add or Update Stock for: {selected_company}")
 
         item_names = df["item"].dropna().unique().tolist()
+        #--- Ensure session state keys exist ---
+        if "selected_item" not in st.session_state:
+            st.session_state.selected_item = ""
+        if "item_selected" not in st.session_state:
+            st.session_state.item_selected = False
+
         # --- Item Name Input with Suggestions ---
         typed_item = st.session_state.get("selected_item", "")
         typed_item = st.text_input("🧾 Item Name", value=typed_item, placeholder="Type to search or add")
