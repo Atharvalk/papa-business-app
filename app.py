@@ -124,6 +124,46 @@ if selected_party:
 
     from streamlit.components.v1 import html
 
+ #----- CSS file for removing gap ---- 
+    st.markdown("""
+    <style>
+        .block-container {
+            padding-bottom: 0px;
+        }
+        .responsive-table + div {
+            margin-top: 0px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown(
+    """
+    <style>
+        .responsive-table {
+            overflow-x: auto;
+            width: 100%;
+            color-scheme: light dark;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+            color: inherit;
+        }
+        th {
+            background-color: #111;
+            color: #fff;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # (After computing party_data and total_balance)
 table_html = """
 <style>
@@ -173,6 +213,11 @@ for i, row in party_data.iterrows():
     """
 
 table_html += "</tbody></table></div>"
+
+html(table_html, height=400, scrolling=True)
+
+# remove unwanted spacing below table
+st.markdown("<div style='margin-top: -20px'></div>", unsafe_allow_html=True)
 
 # 🔥 This is the magic line — replace st.markdown with this:
 html(table_html, height=400, scrolling=True)
