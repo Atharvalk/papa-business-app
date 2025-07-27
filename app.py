@@ -109,7 +109,6 @@ if typed_party:
 selected_party = typed_party
 
 # ------------------ 📄 Party Records Table ------------------
-# ------------------ 📄 Party Records Table ------------------
 if selected_party:
     st.subheader(f"📄 Records for {selected_party}")
     party_data = df[df["Party"] == selected_party]
@@ -120,9 +119,9 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # --------- Mobile-Responsive Table HTML ---------
-    html_table = """
-    <style>
+    # ---- Table CSS ----
+    st.markdown("""
+        <style>
         .responsive-table {
             width: 100%;
             overflow-x: auto;
@@ -141,46 +140,47 @@ if selected_party:
             background-color: #111;
             color: #fff;
         }
-    </style>
+        </style>
+    """, unsafe_allow_html=True)
+
+    # ---- Begin Table ----
+    table_html = """
     <div class="responsive-table">
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Payment</th>
-                <th>Balance</th>
-                <th>Index</th>
-                <th>Action</th>
-            </tr>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Balance</th>
+            <th>Index</th>
+            <th>Action</th>
+        </tr>
     """
 
-    # ---------- Fill Table Rows ----------
     delete_buttons = {}
+
     for real_idx, row in party_data.iterrows():
-        html_table += f"""
+        table_html += f"""
         <tr>
             <td>{row['Date']}</td>
             <td>{row['Amount']}</td>
             <td>{row['Payment']}</td>
             <td>{row['Balance']}</td>
             <td>{real_idx}</td>
-            <td>🗑️ Delete Below</td>
+            <td>❌ Below</td>
         </tr>
         """
-        delete_buttons[real_idx] = st.button(f"❌ Delete entry {real_idx}", key=f"del_{real_idx}")
+    table_html += "</table></div>"
 
-    html_table += "</table></div>"
+    # ---- Show Table ----
+    st.markdown(table_html, unsafe_allow_html=True)
 
-    # -------- Display Table --------
-    st.markdown(html_table, unsafe_allow_html=True)
-
-    # -------- Handle Deletes --------
-    for real_idx, pressed in delete_buttons.items():
-        if pressed:
+    # ---- Delete Buttons (Outside Table) ----
+    for real_idx, _ in party_data.iterrows():
+        if st.button(f"❌ Delete Entry {real_idx}", key=f"del_{real_idx}"):
             if safe_delete_row(worksheet, real_idx + 2):
-                st.success("✅ Entry deleted")
+                st.success(f"✅ Entry {real_idx} deleted")
                 st.rerun()
-
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
