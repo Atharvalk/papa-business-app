@@ -59,8 +59,10 @@ with tab1:
 
     party_list = df["Party"].unique().tolist()
     # --- Party Name Input with Suggestions ---
-    typed_party = st.session_state.get("selected_party", "")
-    typed_party = st.text_input("🔍 Party Name", value=typed_party, placeholder="Type or select...")
+        if "selected_party" not in st.session_state:
+        st.session_state.selected_party = ""
+
+    typed_party = st.text_input("🔍 Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
 
     party_suggestions = [p for p in party_list if typed_party.lower() in p.lower()]
     if typed_party:
@@ -68,17 +70,9 @@ with tab1:
         for s in party_suggestions[:5]:
             if st.button(s, key=f"party_suggest_{s}"):
                 st.session_state.selected_party = s
-                st.session_state.party_selected = True
-                st.experimental_rerun()
+                typed_party = s
 
-        # 🛑 Prevent rerun loop
-        if st.session_state.get("party_selected"):
-            typed_party = st.session_state.selected_party
-            st.session_state.party_selected = False
-
-        # 🟢 Final value for use
-        selected_party = typed_party
-    selected_party = st.session_state.get("selected_party", "")
+    selected_party = typed_party
 
     if selected_party:
         st.subheader(f"📄 Records for {selected_party}")
@@ -184,32 +178,25 @@ with tab2:
         st.subheader(f"📥 Add or Update Stock for: {selected_company}")
 
         item_names = df["item"].dropna().unique().tolist()
+
         # ✅ Step 1: Session default set karo
+                # ✅ Session state default
         if "selected_item" not in st.session_state:
             st.session_state.selected_item = ""
-        if "item_selected" not in st.session_state:
-            st.session_state.item_selected = False
 
-        # ✅ Step 2: Text Input
-        typed_item = st.session_state.selected_item if not st.session_state.item_selected else ""
-        typed_item = st.text_input("🧾 Item Name", value=typed_item, placeholder="Type to search or add")
+        # ✅ Text input (manual typing or suggestion result)
+        typed_item = st.text_input("🧾 Item Name", value=st.session_state.selected_item, placeholder="Type to search or add")
 
-        # ✅ Step 3: Suggestions
+        # ✅ Suggestions based on typed input
         suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
-        if typed_item and not st.session_state.item_selected:
+        if typed_item:
             st.markdown("### 🔍 Suggestions:")
             for s in suggestions[:5]:
                 if st.button(s, key=f"suggest_{s}"):
                     st.session_state.selected_item = s
-                    st.session_state.item_selected = True
-                    st.experimental_rerun()
+                    typed_item = s  # Update displayed input without rerun
 
-        # ✅ Step 4: Rerun flag handled
-        if st.session_state.item_selected:
-            typed_item = st.session_state.selected_item
-            st.session_state.item_selected = False
-
-        # ✅ Final value
+        # ✅ Final usable item name
         item_name = typed_item
 
         selected_dates = st.date_input("📅 Select up to 10 dates", [], min_value=datetime(2023, 1, 1), max_value=datetime.now(), help="Max 10 dates", key="date_input", disabled=False)
