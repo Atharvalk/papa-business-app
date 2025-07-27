@@ -124,7 +124,7 @@ if selected_party:
 
     from streamlit.components.v1 import html
 
- st.markdown(
+    st.markdown(
     """
     <style>
         .responsive-table-container {
