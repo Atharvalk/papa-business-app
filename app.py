@@ -110,7 +110,6 @@ selected_party = typed_party
 
 # ------------------ 📄 Party Records Table ------------------
 if selected_party:
-    party_data = df[df["Party"] == selected_party]
     st.subheader(f"📄 Records for {selected_party}")
     party_data = df[df["Party"] == selected_party]
     total_balance = party_data["Balance"].astype(float).sum()
@@ -120,43 +119,41 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # --------- HTML Table ---------
-    # --- Build HTML Table as string ---
-html_table = """
-<style>
-    .responsive-table {
-        width: 100%;
-        overflow-x: auto;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 600px;
-    }
-    th, td {
-        border: 1px solid #555;
-        padding: 8px;
-        text-align: center;
-    }
-    th {
-        background-color: #111;
-        color: #fff;
-    }
-</style>
+    # --------- Mobile-Responsive Table ---------
+    html_table = """
+    <style>
+        .responsive-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #111;
+            color: #fff;
+        }
+    </style>
+    <div class="responsive-table">
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Balance</th>
+                <th>Index</th>
+            </tr>
+    """
 
-<div class="responsive-table">
-    <table>
-        <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Payment</th>
-            <th>Balance</th>
-            <th>Index</th>
-        </tr>
-"""
-
-for real_idx, row in party_data.iterrows():
-    html_table += f"""
+    for real_idx, row in party_data.iterrows():
+        html_table += f"""
         <tr>
             <td>{row['Date']}</td>
             <td>{row['Amount']}</td>
@@ -164,24 +161,22 @@ for real_idx, row in party_data.iterrows():
             <td>{row['Balance']}</td>
             <td>{real_idx}</td>
         </tr>
-    """
+        """
 
-html_table += "</table></div>"
+    html_table += "</table></div>"
 
-# --- Properly Render HTML ---
-st.markdown(html_table, unsafe_allow_html=True)
+    st.markdown(html_table, unsafe_allow_html=True)
 
-# -------- ✅ Delete Buttons Section --------
-st.markdown("### 🗑️ Delete Entry")
-for real_idx, row in party_data.iterrows():
-    col1, col2 = st.columns([6, 1])
-    with col1:
-        st.markdown(f"🗓️ {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
-    with col2:
-        if st.button("❌", key=f"delete_{real_idx}"):
-            if safe_delete_row(worksheet, real_idx + 2):
-                st.success("✅ Entry deleted")
-                st.rerun()
+    # --------- Separate Delete Section ----------
+    st.markdown("### 🗑️ Delete Entry")
+    for real_idx, row in party_data.iterrows():
+        with st.container():
+            st.write(f"📅 {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
+            delete_btn = st.button("❌", key=f"delete_{real_idx}")
+            if delete_btn:
+                if safe_delete_row(worksheet, real_idx + 2):  # +2 for header and 1-indexing
+                    st.success("✅ Entry deleted successfully.")
+                    st.rerun()
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
