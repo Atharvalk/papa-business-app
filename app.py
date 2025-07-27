@@ -70,7 +70,6 @@ tab1, tab2 = st.tabs(["📦 Business Record", "📊 Stock Manager"])
 
 # =============== 📦 BUSINESS RECORD TAB ===============
 with tab1:
-    # ----------------------- Title -----------------------
     st.title("📦 Business Record System")
 
     # ------------------ Fetch Sheet Data ------------------
@@ -92,7 +91,7 @@ with tab1:
             st.success("✅ Entry Added Successfully!")
             st.rerun()
 
- # ------------------ 🔍 Party Search / Suggestions ------------------
+# ------------------ 🔍 Party Search ------------------
 party_list = df["Party"].unique().tolist()
 if "selected_party" not in st.session_state:
     st.session_state.selected_party = ""
@@ -102,47 +101,56 @@ party_suggestions = [p for p in party_list if typed_party.lower() in p.lower()]
 if typed_party:
     st.markdown("### 🔍 Suggestions:")
     for s in party_suggestions[:5]:
-        if st.button(s, key=f"party_suggest_{s}"):
+        if st.button(s, key=f"suggest_{s}"):
             st.session_state.selected_party = s
             typed_party = s
 
 selected_party = typed_party
 
-# ------------------ 📄 Party Records Table ------------------
+# ------------------ 📄 Show Records ------------------
 if selected_party:
     st.subheader(f"📄 Records for {selected_party}")
-    party_data = df[df["Party"] == selected_party]
-    total_balance = party_data["Balance"].astype(float).sum()
+    party_data = df[df["Party"] == selected_party].reset_index(drop=True)
 
+    # Show total balance
+    try:
+        party_data["Balance"] = party_data["Balance"].astype(float)
+        total_balance = party_data["Balance"].sum()
+    except:
+        total_balance = 0
+
+    st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
+
+    # Responsive styled table
     st.markdown(
-        f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>",
+        """
+        <style>
+            .responsive-table {
+                overflow-x: auto;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                min-width: 600px;
+            }
+            th, td {
+                border: 1px solid #555;
+                padding: 8px;
+                text-align: center;
+            }
+            th {
+                background-color: #111;
+                color: #fff;
+            }
+        </style>
+        """,
         unsafe_allow_html=True,
     )
 
-    # --------- Mobile-Responsive Table ---------
-    html_table = """
-    <style>
-        .responsive-table {
-            width: 100%;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-        th, td {
-            border: 1px solid #555;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #111;
-            color: #fff;
-        }
-    </style>
+    table_html = """
     <div class="responsive-table">
-        <table>
+    <table>
+        <thead>
             <tr>
                 <th>Date</th>
                 <th>Amount</th>
@@ -150,61 +158,60 @@ if selected_party:
                 <th>Balance</th>
                 <th>Index</th>
             </tr>
+        </thead>
+        <tbody>
     """
-
-    for real_idx, row in party_data.iterrows():
-        html_table += f"""
-        <tr>
-            <td>{row['Date']}</td>
-            <td>{row['Amount']}</td>
-            <td>{row['Payment']}</td>
-            <td>{row['Balance']}</td>
-            <td>{real_idx}</td>
-        </tr>
+    for i, row in party_data.iterrows():
+        table_html += f"""
+            <tr>
+                <td>{row['Date']}</td>
+                <td>{row['Amount']}</td>
+                <td>{row['Payment']}</td>
+                <td>{row['Balance']}</td>
+                <td>{i}</td>
+            </tr>
         """
+    table_html += "</tbody></table></div>"
+    st.markdown(table_html, unsafe_allow_html=True)
 
-    html_table += "</table></div>"
-
-    st.markdown(html_table, unsafe_allow_html=True)
-
-    # --------- Separate Delete Section ----------
+    # ---------------- 🗑️ Delete Section ----------------
     st.markdown("### 🗑️ Delete Entry")
-    for real_idx, row in party_data.iterrows():
+    for i, row in party_data.iterrows():
         with st.container():
             st.write(f"📅 {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
-            delete_btn = st.button("❌", key=f"delete_{real_idx}")
-            if delete_btn:
-                if safe_delete_row(worksheet, real_idx + 2):  # +2 for header and 1-indexing
+            if st.button("❌", key=f"delete_{i}"):
+                global_idx = df[(df["Party"] == selected_party)].index[i]  # Get actual row index in full df
+                if safe_delete_row(worksheet, global_idx + 2):  # +2 for header and 1-indexing
                     st.success("✅ Entry deleted successfully.")
                     st.rerun()
 
-        # ------------------ 💾 Generate PDF Download Button ------------------
-        def generate_pdf(party_name, party_data):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Party: {party_name}", ln=True, align='L')
-            pdf.cell(200, 10, txt=" ", ln=True)
-            pdf.cell(40, 10, "Date", 1)
-            pdf.cell(40, 10, "Amount", 1)
-            pdf.cell(40, 10, "Payment", 1)
-            pdf.cell(40, 10, "Balance", 1)
+    # ---------------- 💾 Download PDF Button ----------------
+    def generate_pdf(party_name, data):
+        from fpdf import FPDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt=f"Party: {party_name}", ln=True, align='L')
+        pdf.ln(10)
+        pdf.cell(40, 10, "Date", 1)
+        pdf.cell(40, 10, "Amount", 1)
+        pdf.cell(40, 10, "Payment", 1)
+        pdf.cell(40, 10, "Balance", 1)
+        pdf.ln()
+        for _, row in data.iterrows():
+            pdf.cell(40, 10, str(row["Date"]), 1)
+            pdf.cell(40, 10, f"₹{row['Amount']}", 1)
+            pdf.cell(40, 10, f"₹{row['Payment']}", 1)
+            pdf.cell(40, 10, f"₹{row['Balance']}", 1)
             pdf.ln()
-            for _, row in party_data.iterrows():
-                pdf.cell(40, 10, str(row["Date"]), 1)
-                pdf.cell(40, 10, f"Rs. {row['Amount']}", 1)
-                pdf.cell(40, 10, f"Rs. {row['Payment']}", 1)
-                pdf.cell(40, 10, f"Rs. {row['Balance']}", 1)
-                pdf.ln()
-            file_name = f"{party_name}_records.pdf"
-            pdf.output(file_name)
-            return file_name
+        file_name = f"{party_name}_records.pdf"
+        pdf.output(file_name)
+        return file_name
 
-        if st.button("💾Download PDF"):
-            party_data = df[df["Party"] == selected_party].reset_index(drop=True)
-            file_path = generate_pdf(selected_party, party_data)
-            with open(file_path, "rb") as f:
-                st.download_button("⬇️ Click to Download", f, file_name=file_path)
+    if st.button("💾 Download PDF"):
+        file_path = generate_pdf(selected_party, party_data)
+        with open(file_path, "rb") as f:
+            st.download_button("⬇️ Click to Download", f, file_name=file_path)
 
 
 
