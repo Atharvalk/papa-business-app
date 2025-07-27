@@ -58,10 +58,16 @@ with tab1:
         st.rerun()
 
     party_list = df["Party"].unique().tolist()
-    typed_party = st.text_input("🔍 Type Party Name", placeholder="Start typing party name")
+    typed_party = st.text_input("🔍 Party Name", placeholder="Start typing...")
     suggested = [p for p in party_list if typed_party.lower() in p.lower()]
-    if suggested:
-        st.markdown("🔍 Suggestions: " + ", ".join(suggested))
+
+    if typed_party:
+        st.markdown("### 🔍 Suggestions:")
+        for s in suggested[:5]:  # limit 5 suggestions
+            if st.button(s, key=f"suggest_{s}"):
+                typed_party = s
+                st.experimental_rerun()
+
     selected_party = typed_party if typed_party in party_list else None
 
     if selected_party:
@@ -168,10 +174,18 @@ with tab2:
         st.subheader(f"📥 Add or Update Stock for: {selected_company}")
 
         item_names = df["item"].dropna().unique().tolist()
-        item_name = st.selectbox("🧾 Item Name", options=[""] + item_names, index=0, key="item_selectbox")
-        manual_item = st.text_input("Or enter new item name (optional)", key="custom_item_input")
-        if manual_item:
-            item_name = manual_item
+        typed_item = st.text_input("🧾 Item Name", placeholder="Type to search or add")
+        suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
+
+        if typed_item:
+            st.markdown("### 🔍 Suggestions:")
+            for s in suggestions[:5]:
+                if st.button(s, key=f"item_suggest_{s}"):
+                    typed_item = s
+                    st.experimental_rerun()
+
+        item_name = typed_item
+
 
         selected_dates = st.date_input("📅 Select up to 10 dates", [], min_value=datetime(2023, 1, 1), max_value=datetime.now(), help="Max 10 dates", key="date_input", disabled=False)
         if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
