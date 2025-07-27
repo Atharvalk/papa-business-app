@@ -110,6 +110,7 @@ selected_party = typed_party
 
 # ------------------ 📄 Party Records Table ------------------
 if selected_party:
+    party_data = df[df["Party"] == selected_party]
     st.subheader(f"📄 Records for {selected_party}")
     party_data = df[df["Party"] == selected_party]
     total_balance = party_data["Balance"].astype(float).sum()
