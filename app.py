@@ -1,13 +1,22 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from fpdf import FPDF
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import timedelta
 import time
 
-# --- Helper: Safe append with retry ---
+# --- GOOGLE SHEETS SETUP ---
+creds = st.secrets["service_account"]
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+credentials = Credentials.from_service_account_info(creds, scopes=scope)
+
+# --- HELPER FUNCTIONS ---
+@st.cache_resource(ttl=600)
+def get_sheet():
+    gc = gspread.authorize(credentials)
+    return gc.open_by_key("1HjTAeI0yCGYySs-FnTpoiN4QShdRkdKomXyHi9uuKXY")
+
 def safe_append_row(worksheet, row, retries=3, delay=2):
     for _ in range(retries):
         try:
@@ -18,7 +27,6 @@ def safe_append_row(worksheet, row, retries=3, delay=2):
     st.error("❌ Failed to append row after retries.")
     return False
 
-# --- Helper: Safe delete row with retry ---
 def safe_delete_row(worksheet, row_index, retries=3, delay=2):
     for _ in range(retries):
         try:
@@ -29,14 +37,7 @@ def safe_delete_row(worksheet, row_index, retries=3, delay=2):
     st.error("❌ Failed to delete row after retries.")
     return False
 
-# --- GOOGLE SHEETS SETUP ---
-creds = st.secrets["service_account"]
-scope = ["https://www.googleapis.com/auth/spreadsheets"]
-credentials = Credentials.from_service_account_info(creds, scopes=scope)
-
-gc = gspread.authorize(credentials)
-sheet_key = "1HjTAeI0yCGYySs-FnTpoiN4QShdRkdKomXyHi9uuKXY"
-sh = gc.open_by_key(sheet_key)
+sh = get_sheet()
 worksheet = sh.sheet1
 
 # --- LOGIN SYSTEM ---
@@ -58,18 +59,18 @@ if not st.session_state.logged_in:
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="Papa Business App", layout="centered")
-tab1, tab2 = st.tabs(["📦 Business Record", "📊 Stock Manager"])
+tab1, tab2 = st.tabs(["\ud83d\udce6 Business Record", "\ud83d\udcca Stock Manager"])
 
-# =============== 📦 BUSINESS RECORD TAB ===============
+# =============== \ud83d\udce6 BUSINESS RECORD TAB ===============
 with tab1:
-    st.title("📦 Business Record System")
+    st.title("\ud83d\udce6 Business Record System")
     data = worksheet.get_all_values()
     df = pd.DataFrame(data[1:], columns=data[0])
 
-    st.sidebar.header("➕ Add New Entry")
+    st.sidebar.header("\u2795 Add New Entry")
     party = st.sidebar.text_input("Party Name")
-    item = st.sidebar.number_input("Item Amount ₹", min_value=0, step=100)
-    payment = st.sidebar.number_input("Payment Received ₹", min_value=0, step=100)
+    item = st.sidebar.number_input("Item Amount \u20b9", min_value=0, step=100)
+    payment = st.sidebar.number_input("Payment Received \u20b9", min_value=0, step=100)
     date = st.sidebar.date_input("Date", datetime.now())
 
     if st.sidebar.button("Add Entry"):
@@ -77,19 +78,17 @@ with tab1:
         new_balance = item - payment
         new_row = [party, str(date), str(item), str(payment), str(new_balance)]
         if safe_append_row(worksheet, new_row):
-            st.success("✅ Entry Added Successfully!")
+            st.success("\u2705 Entry Added Successfully!")
             st.rerun()
 
     party_list = df["Party"].unique().tolist()
-    # --- Party Name Input with Suggestions ---
     if "selected_party" not in st.session_state:
         st.session_state.selected_party = ""
 
-    typed_party = st.text_input("🔍 Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
-
+    typed_party = st.text_input("\ud83d\udd0d Party Name", value=st.session_state.selected_party, placeholder="Type or select...")
     party_suggestions = [p for p in party_list if typed_party.lower() in p.lower()]
     if typed_party:
-        st.markdown("### 🔍 Suggestions:")
+        st.markdown("### \ud83d\udd0d Suggestions:")
         for s in party_suggestions[:5]:
             if st.button(s, key=f"party_suggest_{s}"):
                 st.session_state.selected_party = s
@@ -98,10 +97,10 @@ with tab1:
     selected_party = typed_party
 
     if selected_party:
-        st.subheader(f"📄 Records for {selected_party}")
+        st.subheader(f"\ud83d\udcc4 Records for {selected_party}")
         party_data = df[df["Party"] == selected_party]
         total_balance = party_data["Balance"].astype(float).sum()
-        st.markdown(f"<h4 style='color:#1f77b4;'>🧮 Total Balance for {selected_party}: ₹{total_balance}</h4>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color:#1f77b4;'>\ud83e\uddee Total Balance for {selected_party}: \u20b9{total_balance}</h4>", unsafe_allow_html=True)
 
         col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
         col1.markdown("**Date**")
@@ -109,7 +108,7 @@ with tab1:
         col3.markdown("**Payment**")
         col4.markdown("**Balance**")
         col5.markdown("**Index**")
-        col6.markdown("**❌ Delete**")
+        col6.markdown("**\u274c Delete**")
 
         for real_idx, row in party_data.iterrows():
             c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 2, 2, 2, 1])
@@ -118,9 +117,9 @@ with tab1:
             c3.write(row["Payment"])
             c4.write(row["Balance"])
             c5.write(str(real_idx))
-            if c6.button("❌", key=f"del_{real_idx}"):
+            if c6.button("\u274c", key=f"del_{real_idx}"):
                 if safe_delete_row(worksheet, real_idx + 2):
-                    st.success("✅ Entry deleted")
+                    st.success("\u2705 Entry deleted")
                     st.rerun()
 
         def generate_pdf(party_name, party_data):
@@ -134,7 +133,7 @@ with tab1:
             pdf.cell(40, 10, "Payment", 1)
             pdf.cell(40, 10, "Balance", 1)
             pdf.ln()
-            for i, row in party_data.iterrows():
+            for _, row in party_data.iterrows():
                 pdf.cell(40, 10, str(row["Date"]), 1)
                 pdf.cell(40, 10, f"Rs. {row['Amount']}", 1)
                 pdf.cell(40, 10, f"Rs. {row['Payment']}", 1)
@@ -144,11 +143,11 @@ with tab1:
             pdf.output(file_name)
             return file_name
 
-        if st.button("📥 Download PDF"):
+        if st.button("\ud83d\udcc5 Download PDF"):
             party_data = df[df["Party"] == selected_party].reset_index(drop=True)
             file_path = generate_pdf(selected_party, party_data)
             with open(file_path, "rb") as f:
-                st.download_button("⬇️ Click to Download", f, file_name=file_path)
+                st.download_button("\u2b07\ufe0f Click to Download", f, file_name=file_path)
 
 # =============== 📊 STOCK MANAGER TAB ===============
 with tab2:
