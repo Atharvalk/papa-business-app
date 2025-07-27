@@ -119,12 +119,13 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # --------- Mobile-Responsive Table Display ---------
+    # --------- Mobile-Responsive Table (Display Only) ---------
     html_table = """
     <style>
         .responsive-table {
             width: 100%;
             overflow-x: auto;
+            margin-bottom: 20px;
         }
         table {
             width: 100%;
@@ -155,37 +156,33 @@ if selected_party:
             </tr>
     """
 
-    # Generate table rows
     for real_idx, row in party_data.iterrows():
         html_table += f"""
-            <tr>
-                <td>{row['Date']}</td>
-                <td>{row['Amount']}</td>
-                <td>{row['Payment']}</td>
-                <td>{row['Balance']}</td>
-                <td>{real_idx}</td>
-            </tr>
+        <tr>
+            <td>{row['Date']}</td>
+            <td>{row['Amount']}</td>
+            <td>{row['Payment']}</td>
+            <td>{row['Balance']}</td>
+            <td>{real_idx}</td>
+        </tr>
         """
 
     html_table += "</table></div>"
-
     st.markdown(html_table, unsafe_allow_html=True)
 
-    # -------- Delete Buttons Below Table --------
+    # -------- ✅ Working Delete Buttons (Below Table) --------
     st.markdown("### ❌ Delete Entries")
     for real_idx, row in party_data.iterrows():
         col1, col2 = st.columns([5, 1])
         with col1:
             st.markdown(
-                f"**Index {real_idx} | {row['Date']} | Amount: ₹{row['Amount']} | Payment: ₹{row['Payment']}**"
+                f"**🗓 {row['Date']} | 💰 Amount: ₹{row['Amount']} | 💸 Payment: ₹{row['Payment']} | 🧮 Balance: ₹{row['Balance']}**"
             )
         with col2:
             if st.button("❌", key=f"delete_{real_idx}"):
-                if safe_delete_row(worksheet, real_idx + 2):  # adjust for header
+                if safe_delete_row(worksheet, real_idx + 2):  # adjust for Google Sheet row index
                     st.success(f"✅ Entry deleted for index {real_idx}")
                     st.rerun()
-
-
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
