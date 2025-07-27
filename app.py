@@ -184,8 +184,8 @@ with tab2:
             st.markdown("### 🔍 Suggestions:")
             for s in suggestions[:5]:
                 if st.button(s, key=f"suggest_{s}"):
-                st.session_state.selected_item = s
-                st.experimental_rerun()
+                    st.session_state.selected_item = s
+                    st.experimental_rerun()
 
         item_name = st.session_state.get("selected_item", typed_item)
 
