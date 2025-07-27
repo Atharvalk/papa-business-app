@@ -119,9 +119,9 @@ if selected_party:
         unsafe_allow_html=True,
     )
 
-    # ---- Table CSS ----
-    st.markdown("""
-        <style>
+    # --------- HTML Table ---------
+    html_table = """
+    <style>
         .responsive-table {
             width: 100%;
             overflow-x: auto;
@@ -140,52 +140,45 @@ if selected_party:
             background-color: #111;
             color: #fff;
         }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # ---- Begin Table ----
-    table_html = """
+    </style>
     <div class="responsive-table">
-    <table>
-        <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Payment</th>
-            <th>Balance</th>
-            <th>Index</th>
-            <th>Action</th>
-        </tr>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Balance</th>
+                <th>Index</th>
+            </tr>
     """
 
-    delete_buttons = {}
-
     for real_idx, row in party_data.iterrows():
-        table_html += f"""
+        html_table += f"""
         <tr>
             <td>{row['Date']}</td>
             <td>{row['Amount']}</td>
             <td>{row['Payment']}</td>
             <td>{row['Balance']}</td>
             <td>{real_idx}</td>
-            <td>❌ Below</td>
         </tr>
         """
-    table_html += "</table></div>"
 
-    # ---- Show Table ----
-    st.markdown(table_html, unsafe_allow_html=True)
+    html_table += "</table></div>"
 
-    # ---- Delete Buttons (Outside Table) ----
-    st.markdown("#### Delete Entries")
-    for real_idx, _ in party_data.iterrows():
-        col1, col2 = st.columns([4, 1])
+    st.markdown(html_table, unsafe_allow_html=True)
+
+    # -------- ✅ Delete Buttons Section --------
+    st.markdown("### 🗑️ Delete Entry")
+    for real_idx, row in party_data.iterrows():
+        col1, col2 = st.columns([6, 1])
         with col1:
-            st.markdown(f"🗓️ **{df.at[real_idx, 'Date']}** | ₹{df.at[real_idx, 'Amount']} → ₹{df.at[real_idx, 'Balance']}")
+            st.markdown(f"🗓️ {row['Date']} | ₹{row['Amount']} → ₹{row['Balance']}")
         with col2:
             if st.button("❌", key=f"delete_{real_idx}"):
                 if safe_delete_row(worksheet, real_idx + 2):
                     st.success("✅ Entry deleted")
                     st.rerun()
+
 
         # ------------------ 💾 Generate PDF Download Button ------------------
         def generate_pdf(party_name, party_data):
