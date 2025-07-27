@@ -122,17 +122,20 @@ with tab1:
         """, unsafe_allow_html=True)
 
         # --- Render Table ---
-        st.markdown('<div class="scrollable-table">', unsafe_allow_html=True)
-        st.markdown("| Date | Amount | Payment | Balance | Index | Delete |\n|---|---|---|---|---|---|", unsafe_allow_html=True)
+        st.markdown("### 🧾 Entries")
+
         for real_idx, row in party_data.iterrows():
-            delete_button = st.button("❌", key=f"del_{real_idx}")
-            row_md = f"| {row['Date']} | {row['Amount']} | {row['Payment']} | {row['Balance']} | {real_idx} | {'🗑️' if delete_button else ''} |"
-            st.markdown(row_md, unsafe_allow_html=True)
-            if delete_button:
-                if safe_delete_row(worksheet, real_idx + 2):
-                    st.success("✅ Entry deleted")
-                    st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+            with st.container():
+                cols = st.columns([2, 2, 2, 2, 1, 1])
+                cols[0].markdown(f"📅 **{row['Date']}**")
+                cols[1].markdown(f"💰 ₹{row['Amount']}")
+                cols[2].markdown(f"📥 ₹{row['Payment']}")
+                cols[3].markdown(f"🧾 ₹{row['Balance']}")
+                cols[4].markdown(f"🔢 {real_idx}")
+                if cols[5].button("❌", key=f"del_{real_idx}"):
+                    if safe_delete_row(worksheet, real_idx + 2):
+                        st.success("✅ Entry deleted")
+                        st.rerun()
 
         # --- Generate PDF ---
         def generate_pdf(party_name, party_data):
