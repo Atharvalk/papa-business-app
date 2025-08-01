@@ -271,7 +271,8 @@ with tab2:
                 )
                 sold_entries[str(dt)] = sold
 
-            if st.button("💾 Save Stock Entry", key="save_stock_btn"):
+            submitted = st.form_submit_button("💾 Save Stock Entry")
+            if submitted:
                 df["date"] = pd.to_datetime(df["date"], errors="coerce")
                 final = current_stock
 
