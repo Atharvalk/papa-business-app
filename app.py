@@ -222,78 +222,79 @@ with tab2:
             st.session_state.selected_item = ""
 
         # ✅ Text input (manual typing or suggestion result)
-        typed_item = st.text_input("🧾 Item Name", value=st.session_state.selected_item, placeholder="Type to search or add")
+        with st.form("stock_entry_form"):
+            typed_item = st.text_input("🧾 Item Name", value=st.session_state.selected_item, placeholder="Type to search or add")
 
-        # ✅ Suggestions based on typed input
-        suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
-        if typed_item:
-            st.markdown("### 🔍 Suggestions:")
-            for s in suggestions[:5]:
-                if st.button(s, key=f"suggest_{s}"):
-                    st.session_state.selected_item = s
-                    typed_item = s  # Update displayed input without rerun
+            # ✅ Suggestions based on typed input
+            suggestions = [name for name in item_names if typed_item.lower() in name.lower()]
+            if typed_item:
+                st.markdown("### 🔍 Suggestions:")
+                for s in suggestions[:5]:
+                    if st.button(s, key=f"suggest_{s}"):
+                        st.session_state.selected_item = s
+                        typed_item = s  # Update displayed input without rerun
 
-        # ✅ Final usable item name
-        item_name = typed_item
+            # ✅ Final usable item name
+            item_name = typed_item
 
-        selected_dates = st.date_input(
-            "📅 Select up to 10 dates",
-            [],
-            min_value=date(2023, 1, 1),
-            max_value=date.today(),
-            help="Max 10 dates",
-            key="date_input"
-        )
-        if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
-            start_date, end_date = selected_dates
-            selected_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-        else:
-            selected_dates = list(selected_dates)
-
-        item_df = df[df["item"] == item_name]
-        if not item_df.empty:
-            item_df["date"] = pd.to_datetime(item_df["date"], errors="coerce")
-            latest_row = item_df.sort_values("date").iloc[-1]
-            autofill_stock = int(latest_row["final_stock"])
-        else:
-            autofill_stock = 0
-
-        current_stock = st.number_input("📦 Current Stock", min_value=0, value=autofill_stock)
-        new_stock = st.number_input("➕ New Stock Arrived", min_value=0, key="new_stock_input")
-
-        sold_entries = {}
-        for dt in selected_dates:
-            sold = st.number_input(
-                f"📤 Sold on {dt.strftime('%d %b %Y')}",
-                min_value=0,
-                key=f"sold_{dt.strftime('%Y%m%d')}"
+            selected_dates = st.date_input(
+                "📅 Select up to 10 dates",
+                [],
+                min_value=date(2023, 1, 1),
+                max_value=date.today(),
+                help="Max 10 dates",
+                key="date_input"
             )
-            sold_entries[str(dt)] = sold
+            if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
+                start_date, end_date = selected_dates
+                selected_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+            else:
+                selected_dates = list(selected_dates)
 
-        if st.button("💾 Save Stock Entry", key="save_stock_btn"):
-            df["date"] = pd.to_datetime(df["date"], errors="coerce")
-            final = current_stock
+            item_df = df[df["item"] == item_name]
+            if not item_df.empty:
+                item_df["date"] = pd.to_datetime(item_df["date"], errors="coerce")
+                latest_row = item_df.sort_values("date").iloc[-1]
+                autofill_stock = int(latest_row["final_stock"])
+            else:
+                autofill_stock = 0
 
-            for dt_str, sold_qty in sold_entries.items():
-                dt_obj = pd.to_datetime(dt_str).strftime("%Y-%m-%d")
-                mask = (df["item"] == item_name) & (df["date"].dt.strftime("%Y-%m-%d") == dt_obj)
+            current_stock = st.number_input("📦 Current Stock", min_value=0, value=autofill_stock)
+            new_stock = st.number_input("➕ New Stock Arrived", min_value=0, key="new_stock_input")
 
-                if mask.any():
-                    row_idx = df[mask].index[0] + 2
-                    old_sold = int(df.loc[mask, "sold_qty"].values[0])
-                    new_sold = old_sold + sold_qty
-                    final = final + new_stock - sold_qty
-                    stock_sheet.update(f"C{row_idx}:F{row_idx}", [[current_stock, new_stock, new_sold, final]])
-                else:
-                    final = final + new_stock - sold_qty
-                    new_row = [item_name, dt_obj, current_stock, new_stock, sold_qty, final]
-                    stock_sheet.append_row([str(x) for x in new_row])
+            sold_entries = {}
+            for dt in selected_dates:
+                sold = st.number_input(
+                    f"📤 Sold on {dt.strftime('%d %b %Y')}",
+                    min_value=0,
+                    key=f"sold_{dt.strftime('%Y%m%d')}"
+                )
+                sold_entries[str(dt)] = sold
 
-                current_stock = final
-                new_stock = 0
+            if st.button("💾 Save Stock Entry", key="save_stock_btn"):
+                df["date"] = pd.to_datetime(df["date"], errors="coerce")
+                final = current_stock
 
-            st.success("✅ Stock data saved successfully!")
-            st.rerun()
+                for dt_str, sold_qty in sold_entries.items():
+                    dt_obj = pd.to_datetime(dt_str).strftime("%Y-%m-%d")
+                    mask = (df["item"] == item_name) & (df["date"].dt.strftime("%Y-%m-%d") == dt_obj)
+
+                    if mask.any():
+                        row_idx = df[mask].index[0] + 2
+                        old_sold = int(df.loc[mask, "sold_qty"].values[0])
+                        new_sold = old_sold + sold_qty
+                        final = final + new_stock - sold_qty
+                        stock_sheet.update(f"C{row_idx}:F{row_idx}", [[current_stock, new_stock, new_sold, final]])
+                    else:
+                        final = final + new_stock - sold_qty
+                        new_row = [item_name, dt_obj, current_stock, new_stock, sold_qty, final]
+                        stock_sheet.append_row([str(x) for x in new_row])
+
+                    current_stock = final
+                    new_stock = 0
+
+                st.success("✅ Stock data saved successfully!")
+                st.rerun()
 
         # 📊 Stock Summary Table
         st.subheader("📊 Filtered Stock Summary")
