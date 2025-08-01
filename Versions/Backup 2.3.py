@@ -5,7 +5,6 @@ from fpdf import FPDF
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import timedelta
-from datetime import date
 import time
 
 # --- Helper: Safe append with retry ---
@@ -238,14 +237,7 @@ with tab2:
         # ✅ Final usable item name
         item_name = typed_item
 
-        selected_dates = st.date_input(
-            "📅 Select up to 10 dates",
-            [],
-            min_value=date(2023, 1, 1),
-            max_value=date.today(),
-            help="Max 10 dates",
-            key="date_input"
-        )
+        selected_dates = st.date_input("📅 Select up to 10 dates", [], min_value=datetime(2023, 1, 1), max_value=datetime.now(), help="Max 10 dates", key="date_input", disabled=False)
         if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
             start_date, end_date = selected_dates
             selected_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
@@ -300,13 +292,7 @@ with tab2:
         # 📊 Stock Summary Table
         st.subheader("📊 Filtered Stock Summary")
 
-        summary_range = st.date_input(
-            "📅 Select date range (max 10 days)",
-            [],
-            min_value=date(2023, 1, 1),
-            max_value=date.today(),
-            help="Choose 7–10 days for summary"
-        )
+        summary_range = st.date_input("📅 Select date range (max 10 days)", [], min_value=datetime(2023,1,1), max_value=datetime.now(), help="Choose 7–10 days for summary")
         if isinstance(summary_range, tuple) and len(summary_range) == 2:
             s_date, e_date = summary_range
             summary_dates = [s_date + timedelta(days=i) for i in range((e_date - s_date).days + 1)]
@@ -359,4 +345,8 @@ with tab2:
 
 
 
-#================ Version 2.3 ================
+
+
+
+
+  #====================================================== App Version 2.3  ======================================================
