@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 from fpdf import FPDF
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import timedelta
-from datetime import date
+from datetime import datetime, timedelta, date
 import time
 
 # --- Helper: Safe append with retry ---
