@@ -72,12 +72,12 @@ with tab1:
     party = st.sidebar.text_input("Party Name")
     item = st.sidebar.number_input("Item Amount ₹", min_value=0, step=100)
     payment = st.sidebar.number_input("Payment Received ₹", min_value=0, step=100)
-    date = st.sidebar.date_input("Date", datetime.now())
+    entry_date = st.sidebar.date_input("Date", datetime.now())
 
     if st.sidebar.button("Add Entry"):
         prev_balance = float(df[df["Party"] == party]["Balance"].iloc[-1]) if party in df["Party"].values else 0
         new_balance = item - payment
-        new_row = [party, str(date), str(item), str(payment), str(new_balance)]
+        new_row = [party, str(entry_date), str(item), str(payment), str(new_balance)]
         if safe_append_row(worksheet, new_row):
             st.success("✅ Entry Added Successfully!")
             st.rerun()
